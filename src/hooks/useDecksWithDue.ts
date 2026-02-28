@@ -6,7 +6,8 @@ export interface DeckWithDue {
   name: string
   description: string
   totalCards: number
-  dueCards: number
+  phoneticsReady: number
+  meaningReady: number
 }
 
 export function useDecksWithDue(): DeckWithDue[] | undefined {
@@ -17,13 +18,13 @@ export function useDecksWithDue(): DeckWithDue[] | undefined {
     return Promise.all(
       decks.map(async (deck) => {
         const cards = await db.cards.where('deckId').equals(deck.id).toArray()
-        const dueCards = cards.filter((c) => c.fsrsState.due <= now).length
         return {
           id: deck.id,
           name: deck.name,
           description: deck.description,
           totalCards: cards.length,
-          dueCards,
+          phoneticsReady: cards.filter((c) => c.fsrsPhonetics.due <= now).length,
+          meaningReady: cards.filter((c) => c.fsrsMeaning.due <= now).length,
         }
       })
     )
