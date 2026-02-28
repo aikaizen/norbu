@@ -15,7 +15,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/decks" element={<Decks />} />
           <Route path="/decks/:deckId" element={<DeckDetail />} />
-          <Route path="/decks/:deckId/review" element={<Review />} />
+          <Route path="/decks/:deckId/review/:mode" element={<Review />} />
           <Route path="/sessions" element={<Sessions />} />
           <Route path="/stats" element={<Stats />} />
         </Route>
