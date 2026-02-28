@@ -1,46 +1,56 @@
 import { Link } from 'react-router-dom'
 import { useDecksWithDue } from '../hooks/useDecksWithDue'
+import { useDiamonds } from '../hooks/useDiamonds'
 
 export function Home() {
   const decks = useDecksWithDue()
-  const totalDue = decks?.reduce((sum, d) => sum + d.dueCards, 0) ?? 0
+  const diamonds = useDiamonds()
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Norbu</h1>
-        <p className="text-stone-500 dark:text-stone-400 mt-1 text-sm">ནོར་བུ — jewel</p>
-      </div>
-
-      {totalDue > 0 && (
-        <div className="rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-5">
-          <p className="text-amber-800 dark:text-amber-300 font-medium">
-            {totalDue} card{totalDue !== 1 ? 's' : ''} due for review
-          </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">Norbu</h1>
+          <p className="text-stone-500 dark:text-stone-400 mt-1 text-sm">ནོར་བུ — jewel</p>
         </div>
-      )}
+        <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-semibold text-lg pt-1">
+          <span>◆</span>
+          <span>{diamonds}</span>
+        </div>
+      </div>
 
       <div className="space-y-3">
         <h2 className="text-xs font-medium uppercase tracking-widest text-stone-400">Decks</h2>
         {decks?.map((deck) => (
-          <Link
+          <div
             key={deck.id}
-            to={`/decks/${deck.id}/review`}
-            className="block rounded-xl border border-stone-200 dark:border-stone-800 p-4 hover:border-amber-400 dark:hover:border-amber-700 transition-colors"
+            className="rounded-xl border border-stone-200 dark:border-stone-800 p-4 space-y-3"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">{deck.name}</p>
-                <p className="text-sm text-stone-500 dark:text-stone-400 mt-0.5">{deck.description}</p>
-              </div>
-              <div className="text-right shrink-0 ml-4">
-                <p className="text-2xl font-semibold text-amber-700 dark:text-amber-500">
-                  {deck.dueCards}
-                </p>
-                <p className="text-xs text-stone-400">due</p>
-              </div>
+            <div>
+              <p className="font-medium">{deck.name}</p>
+              <p className="text-sm text-stone-500 dark:text-stone-400 mt-0.5">{deck.description}</p>
             </div>
-          </Link>
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                to={`/decks/${deck.id}/review/phonetics`}
+                className="flex items-center justify-between rounded-lg bg-stone-100 dark:bg-stone-800 px-3 py-2.5 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+              >
+                <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Phonetics</span>
+                <span className="text-sm font-semibold text-amber-700 dark:text-amber-500">
+                  {deck.phoneticsReady}
+                </span>
+              </Link>
+              <Link
+                to={`/decks/${deck.id}/review/meaning`}
+                className="flex items-center justify-between rounded-lg bg-stone-100 dark:bg-stone-800 px-3 py-2.5 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+              >
+                <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Meanings</span>
+                <span className="text-sm font-semibold text-amber-700 dark:text-amber-500">
+                  {deck.meaningReady}
+                </span>
+              </Link>
+            </div>
+          </div>
         ))}
       </div>
     </div>
