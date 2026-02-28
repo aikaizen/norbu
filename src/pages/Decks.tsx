@@ -27,19 +27,27 @@ export function Decks() {
 
       <div className="space-y-2">
         {decks?.map((deck) => (
-          <div key={deck.id} className="rounded-xl border border-stone-200 dark:border-stone-800 p-4 flex items-center justify-between">
-            <div>
-              <Link to={`/decks/${deck.id}`} className="font-medium hover:text-amber-700 dark:hover:text-amber-500 transition-colors">
-                {deck.name}
+          <div key={deck.id} className="rounded-xl border border-stone-200 dark:border-stone-800 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <Link to={`/decks/${deck.id}`} className="hover:underline">
+                <p className="font-medium">{deck.name}</p>
+                <p className="text-sm text-stone-500 dark:text-stone-400">{deck.totalCards} cards</p>
               </Link>
-              <p className="text-sm text-stone-500 dark:text-stone-400">{deck.totalCards} cards · {deck.dueCards} due</p>
             </div>
-            <Link
-              to={`/decks/${deck.id}/review`}
-              className="text-sm px-3 py-1.5 rounded-lg bg-amber-700 text-white hover:bg-amber-800 transition-colors"
-            >
-              Review
-            </Link>
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                to={`/decks/${deck.id}/review/phonetics`}
+                className="text-center text-sm px-3 py-2 rounded-lg bg-amber-700 text-white hover:bg-amber-800 transition-colors"
+              >
+                Phonetics ({deck.phoneticsReady})
+              </Link>
+              <Link
+                to={`/decks/${deck.id}/review/meaning`}
+                className="text-center text-sm px-3 py-2 rounded-lg border border-amber-700 text-amber-700 dark:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors"
+              >
+                Meanings ({deck.meaningReady})
+              </Link>
+            </div>
           </div>
         ))}
       </div>
