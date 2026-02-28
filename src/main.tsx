@@ -4,6 +4,10 @@ import App from './App'
 import './index.css'
 import { seedIfEmpty } from './db/seeds'
 
+if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.documentElement.classList.add('dark')
+}
+
 seedIfEmpty().then(() => {
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
