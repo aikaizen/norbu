@@ -23,7 +23,11 @@ export function useReviewSession(deckId: string, mode: ReviewMode) {
 
   const rateCard = useCallback(async (card: Card, rating: RatingKey): Promise<boolean> => {
     const newState = scheduleCard(card[field], rating)
-    await db.cards.update(card.id, { [field]: newState })
+    const update: Partial<Card> =
+      field === 'fsrsPhonetics'
+        ? { fsrsPhonetics: newState }
+        : { fsrsMeaning: newState }
+    await db.cards.update(card.id, update)
     setReviewed((prev) => [...prev, card.id])
 
     const earned =
