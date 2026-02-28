@@ -35,6 +35,7 @@ export const sadhanaCards: Card[] = vocab.map((v, i) => ({
   deckId: DECK_ID,
   front: { tibetan: v.tibetan, phonetic: v.phonetic, english: v.english },
   tags: v.tags,
+  difficulty: i < 6 ? 1 : i < 14 ? 2 : 3,
   fsrsPhonetics: getInitialFSRSState(),
   fsrsMeaning: getInitialFSRSState(),
   createdAt: Date.now(),

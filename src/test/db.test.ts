@@ -41,6 +41,7 @@ describe('NorbuDB', () => {
       deckId: 'test-deck-1',
       front: { tibetan: 'སངས་རྒྱས་', phonetic: 'sangye', english: 'Buddha' },
       tags: ['alphabet'],
+      difficulty: 1,
       fsrsPhonetics: initialState(),
       fsrsMeaning: initialState(),
       createdAt: Date.now(),

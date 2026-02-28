@@ -43,6 +43,7 @@ export const alphabetCards: Card[] = letters.map((l, i) => ({
   deckId: DECK_ID,
   front: l,
   tags: ['alphabet'],
+  difficulty: 1,
   fsrsPhonetics: getInitialFSRSState(),
   fsrsMeaning: getInitialFSRSState(),
   createdAt: Date.now(),

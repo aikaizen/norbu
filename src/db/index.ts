@@ -40,6 +40,18 @@ class NorbuDB extends Dexie {
       settings: 'id',
       reviewLogs: '++id, cardId, mode, timestamp',
     })
+
+    this.version(4).stores({
+      cards: 'id, deckId, *tags, difficulty, createdAt',
+      decks: 'id, language, createdAt',
+      sessions: 'id, date, createdAt',
+      settings: 'id',
+      reviewLogs: '++id, cardId, mode, timestamp',
+    }).upgrade(async (tx) => {
+      await tx.table('cards').toCollection().modify((card: any) => {
+        card.difficulty = card.difficulty ?? 1
+      })
+    })
   }
 }
 

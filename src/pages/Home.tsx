@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDecksWithDue } from '../hooks/useDecksWithDue'
 import { useDiamonds } from '../hooks/useDiamonds'
+import { CardForm } from '../components/CardForm'
 
 export function Home() {
   const decks = useDecksWithDue()
   const diamonds = useDiamonds()
+  const [showAddCard, setShowAddCard] = useState(false)
 
   return (
     <div className="space-y-8">
@@ -18,6 +21,19 @@ export function Home() {
           <span>{diamonds}</span>
         </div>
       </div>
+
+      <button
+        onClick={() => setShowAddCard(!showAddCard)}
+        className="w-full rounded-xl border border-dashed border-stone-300 dark:border-stone-700 py-3 text-sm text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+      >
+        + Add new card
+      </button>
+
+      {showAddCard && (
+        <div className="rounded-xl border border-stone-200 dark:border-stone-800 p-4">
+          <CardForm onDone={() => setShowAddCard(false)} />
+        </div>
+      )}
 
       <div className="space-y-3">
         <h2 className="text-xs font-medium uppercase tracking-widest text-stone-400">Decks</h2>

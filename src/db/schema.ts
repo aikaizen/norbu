@@ -22,8 +22,9 @@ export interface Card {
   front: CardFront
   tags: string[]
   audioUrl?: string
-  fsrsPhonetics: FSRSState   // was fsrsState — renamed
-  fsrsMeaning: FSRSState     // NEW: independent meaning schedule
+  difficulty: number          // user-assigned difficulty level, starts at 1
+  fsrsPhonetics: FSRSState
+  fsrsMeaning: FSRSState
   createdAt: number
 }
 
