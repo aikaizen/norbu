@@ -10,6 +10,17 @@ const newDeck = (): Deck => ({
   createdAt: Date.now(),
 })
 
+const initialState = () => ({
+  due: Date.now(),
+  stability: 0,
+  difficulty: 0,
+  elapsed_days: 0,
+  scheduled_days: 0,
+  reps: 0,
+  lapses: 0,
+  state: 0 as const,
+})
+
 describe('NorbuDB', () => {
   beforeEach(async () => {
     await db.decks.clear()
@@ -30,16 +41,8 @@ describe('NorbuDB', () => {
       deckId: 'test-deck-1',
       front: { tibetan: 'སངས་རྒྱས་', phonetic: 'sangye', english: 'Buddha' },
       tags: ['alphabet'],
-      fsrsState: {
-        due: Date.now(),
-        stability: 0,
-        difficulty: 0,
-        elapsed_days: 0,
-        scheduled_days: 0,
-        reps: 0,
-        lapses: 0,
-        state: 0,
-      },
+      fsrsPhonetics: initialState(),
+      fsrsMeaning: initialState(),
       createdAt: Date.now(),
     }
     await db.cards.add(card)
