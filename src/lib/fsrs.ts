@@ -1,4 +1,4 @@
-import { createEmptyCard, fsrs, generatorParameters, Rating, type Card as FSRSCard, type RecordLog } from 'ts-fsrs'
+import { createEmptyCard, fsrs, generatorParameters, Rating, type Card as FSRSCard, type Grade } from 'ts-fsrs'
 import type { FSRSState } from '../db/schema'
 
 const f = fsrs(generatorParameters({ enable_fuzz: true }))
@@ -7,7 +7,7 @@ export { Rating }
 
 export type RatingKey = 'again' | 'hard' | 'good' | 'easy'
 
-export const RATING_MAP: Record<RatingKey, Rating> = {
+export const RATING_MAP: Record<RatingKey, Grade> = {
   again: Rating.Again,
   hard: Rating.Hard,
   good: Rating.Good,
@@ -52,9 +52,8 @@ export function getInitialFSRSState(): FSRSState {
 export function scheduleCard(state: FSRSState, rating: RatingKey): FSRSState {
   const card = stateToFSRSCard(state)
   const now = new Date()
-  const log: RecordLog = f.repeat(card, now)
-  const scheduled = log[RATING_MAP[rating]].card
-  return fsrsCardToState(scheduled)
+  const item = f.next(card, now, RATING_MAP[rating])
+  return fsrsCardToState(item.card)
 }
 
 export function isDue(state: FSRSState): boolean {
