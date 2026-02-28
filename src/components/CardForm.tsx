@@ -16,7 +16,8 @@ export function CardForm({ deckId, onDone }: { deckId: string; onDone: () => voi
       deckId,
       front: { tibetan: tibetan.trim(), phonetic: phonetic.trim(), english: english.trim() },
       tags: [],
-      fsrsState: getInitialFSRSState(),
+      fsrsPhonetics: getInitialFSRSState(),
+      fsrsMeaning: getInitialFSRSState(),
       createdAt: Date.now(),
     })
     setTibetan(''); setPhonetic(''); setEnglish('')
