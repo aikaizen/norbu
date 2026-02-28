@@ -56,6 +56,30 @@ export function scheduleCard(state: FSRSState, rating: RatingKey): FSRSState {
   return fsrsCardToState(item.card)
 }
 
+function formatInterval(ms: number): string {
+  const minutes = Math.round(ms / 60000)
+  if (minutes < 1) return '<1m'
+  if (minutes < 60) return `${minutes}m`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return `${hours}h`
+  const days = Math.round(hours / 24)
+  if (days < 30) return `${days}d`
+  const months = Math.round(days / 30)
+  return `${months}mo`
+}
+
+export function getSchedulePreview(state: FSRSState): Record<RatingKey, string> {
+  const card = stateToFSRSCard(state)
+  const now = new Date()
+  const result = {} as Record<RatingKey, string>
+  for (const key of ['again', 'hard', 'good', 'easy'] as RatingKey[]) {
+    const item = f.next(card, now, RATING_MAP[key])
+    const diffMs = item.card.due.getTime() - now.getTime()
+    result[key] = formatInterval(diffMs)
+  }
+  return result
+}
+
 export function isDue(state: FSRSState): boolean {
   return state.due <= Date.now()
 }

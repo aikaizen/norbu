@@ -21,13 +21,22 @@ export function useReviewSession(deckId: string, mode: ReviewMode) {
 
   const currentCard: Card | undefined = dueCards?.[0]
 
-  const rateCard = useCallback(async (card: Card, rating: RatingKey): Promise<boolean> => {
+  const rateCard = useCallback(async (card: Card, rating: RatingKey, answer: string): Promise<boolean> => {
     const newState = scheduleCard(card[field], rating)
     const update: Partial<Card> =
       field === 'fsrsPhonetics'
         ? { fsrsPhonetics: newState }
         : { fsrsMeaning: newState }
     await db.cards.update(card.id, update)
+
+    await db.reviewLogs.add({
+      cardId: card.id,
+      mode,
+      answer,
+      rating,
+      timestamp: Date.now(),
+    })
+
     setReviewed((prev) => [...prev, card.id])
 
     const earned =
@@ -39,7 +48,7 @@ export function useReviewSession(deckId: string, mode: ReviewMode) {
 
     if (earned) await addDiamond()
     return earned
-  }, [field])
+  }, [field, mode])
 
   return {
     currentCard,

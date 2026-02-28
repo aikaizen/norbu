@@ -6,7 +6,7 @@ import { FlashCard } from '../components/FlashCard'
 import { RatingButtons } from '../components/RatingButtons'
 import { DiamondPop } from '../components/DiamondPop'
 import { useReviewSession, type ReviewMode } from '../hooks/useReviewSession'
-import type { RatingKey } from '../lib/fsrs'
+import { getSchedulePreview, type RatingKey } from '../lib/fsrs'
 
 function getHint(mode: ReviewMode, phonetic: string, english: string): string {
   if (mode === 'phonetics') {
@@ -23,23 +23,33 @@ export function Review() {
   const [isFlipped, setIsFlipped] = useState(false)
   const [hintUsed, setHintUsed] = useState(false)
   const [showDiamond, setShowDiamond] = useState(false)
+  const [answer, setAnswer] = useState('')
 
   const deck = useLiveQuery(() => db.decks.get(deckId!), [deckId])
   const { currentCard, remaining, reviewed, rateCard, isDone } = useReviewSession(deckId!, reviewMode)
 
+  const field = reviewMode === 'phonetics' ? 'fsrsPhonetics' : 'fsrsMeaning'
+  const intervals = currentCard ? getSchedulePreview(currentCard[field]) : undefined
+
   useEffect(() => {
     setHintUsed(false)
     setIsFlipped(false)
+    setAnswer('')
   }, [currentCard?.id])
 
   const handleRate = async (rating: RatingKey) => {
     if (!currentCard) return
-    const earned = await rateCard(currentCard, rating)
+    const earned = await rateCard(currentCard, rating, answer)
     if (earned) {
       setShowDiamond(true)
       setTimeout(() => setShowDiamond(false), 800)
     }
     setIsFlipped(false)
+  }
+
+  const handleSubmitAnswer = (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsFlipped(true)
   }
 
   const hint = currentCard
@@ -104,17 +114,26 @@ export function Review() {
           />
 
           {!isFlipped && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => setIsFlipped(true)}
-                className="flex-1 rounded-xl bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 py-4 font-medium hover:opacity-90 transition-opacity"
-              >
-                Show answer
-              </button>
+            <div className="space-y-2">
+              <form onSubmit={handleSubmitAnswer} className="flex gap-2">
+                <input
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  className="flex-1 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  placeholder={reviewMode === 'phonetics' ? 'Type the pronunciation...' : 'Type the meaning...'}
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  className="rounded-xl bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 px-5 py-3 font-medium hover:opacity-90 transition-opacity text-sm"
+                >
+                  Reveal
+                </button>
+              </form>
               {!hintUsed && (
                 <button
                   onClick={() => setHintUsed(true)}
-                  className="rounded-xl border border-stone-200 dark:border-stone-700 px-5 py-4 text-sm text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                  className="w-full rounded-xl border border-stone-200 dark:border-stone-700 py-2.5 text-sm text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
                 >
                   Hint
                 </button>
@@ -122,10 +141,16 @@ export function Review() {
             </div>
           )}
 
-          {isFlipped && (
-            <div className="space-y-2">
+          {isFlipped && intervals && (
+            <div className="space-y-3">
+              {answer && (
+                <div className="rounded-lg bg-stone-100 dark:bg-stone-800 px-3 py-2 text-sm">
+                  <span className="text-stone-400 text-xs">Your answer: </span>
+                  <span className="text-stone-700 dark:text-stone-300">{answer}</span>
+                </div>
+              )}
               <p className="text-xs text-center text-stone-400">How well did you know this?</p>
-              <RatingButtons onRate={handleRate} />
+              <RatingButtons onRate={handleRate} intervals={intervals} />
             </div>
           )}
         </>

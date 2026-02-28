@@ -49,3 +49,12 @@ export interface Settings {
   id: 'singleton'
   diamonds: number
 }
+
+export interface ReviewLog {
+  id?: number
+  cardId: string
+  mode: 'phonetics' | 'meaning'
+  answer: string
+  rating: string
+  timestamp: number
+}

@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { Card, Deck, Session, Settings } from './schema'
+import type { Card, Deck, Session, Settings, ReviewLog } from './schema'
 import { getInitialFSRSState } from '../lib/fsrs'
 
 class NorbuDB extends Dexie {
@@ -7,6 +7,7 @@ class NorbuDB extends Dexie {
   decks!: EntityTable<Deck, 'id'>
   sessions!: EntityTable<Session, 'id'>
   settings!: EntityTable<Settings, 'id'>
+  reviewLogs!: EntityTable<ReviewLog, 'id'>
 
   constructor() {
     super('NorbuDB')
@@ -30,6 +31,14 @@ class NorbuDB extends Dexie {
         delete card.fsrsState
       })
       await tx.table('settings').add({ id: 'singleton', diamonds: 0 })
+    })
+
+    this.version(3).stores({
+      cards: 'id, deckId, *tags, createdAt',
+      decks: 'id, language, createdAt',
+      sessions: 'id, date, createdAt',
+      settings: 'id',
+      reviewLogs: '++id, cardId, mode, timestamp',
     })
   }
 }
