@@ -3,16 +3,19 @@ import {
   addDoc,
   collection,
   doc,
+  type DocumentData,
+  type DocumentReference,
   getDoc,
   getDocs,
   query,
   setDoc,
+  type SetOptions,
   writeBatch,
 } from 'firebase/firestore'
 import { dbCloud } from './firebase'
 import { clearLocalData, getLocalDataSnapshot, replaceLocalData } from '../db'
 import type { Card, Deck, ReviewLog, Session, Settings } from '../db/schema'
-import { STARTER_DECKS, getStarterCards } from '../db/seeds'
+import { ensureStarterData, STARTER_DECKS, getStarterCards } from '../db/seeds'
 import { getInitialFSRSState } from './fsrs'
 
 export const COMMUNITY_DECK_ID = 'deck-community-cards'
@@ -43,6 +46,38 @@ interface CommunityCard {
   tags: string[]
   difficulty: number
   createdAt: number
+}
+
+function stripUndefined<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => stripUndefined(item))
+      .filter((item) => item !== undefined) as T
+  }
+
+  if (value && typeof value === 'object') {
+    const result: Record<string, unknown> = {}
+    for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+      if (nested === undefined) continue
+      result[key] = stripUndefined(nested)
+    }
+    return result as T
+  }
+
+  return value
+}
+
+async function setDocSafe<T extends DocumentData>(
+  reference: DocumentReference<T>,
+  data: T,
+  options?: SetOptions,
+) {
+  const cleanData = stripUndefined(data)
+  if (options) {
+    await setDoc(reference, cleanData, options)
+    return
+  }
+  await setDoc(reference, cleanData)
 }
 
 function requireCloud() {
@@ -124,11 +159,11 @@ export async function ensureProfile(user: User): Promise<UserProfile> {
       createdAt: existingData.createdAt ?? profile.createdAt,
       updatedAt: Date.now(),
     }
-    await setDoc(ref, merged, { merge: true })
+    await setDocSafe(ref, merged, { merge: true })
     return merged
   }
 
-  await setDoc(ref, profile)
+  await setDocSafe(ref, profile)
   return profile
 }
 
@@ -147,13 +182,13 @@ async function ensureStarterCloudData(userId: string) {
 
   for (const deck of starterDecks) {
     if (existingDeckIds.has(deck.id)) continue
-    batch.set(doc(deckCollection(userId), deck.id), deck)
+    batch.set(doc(deckCollection(userId), deck.id), stripUndefined(deck))
     writes += 1
   }
 
   for (const card of getStarterCards()) {
     if (existingCardIds.has(card.id)) continue
-    batch.set(doc(cardCollection(userId), card.id), card)
+    batch.set(doc(cardCollection(userId), card.id), stripUndefined(card))
     writes += 1
   }
 
@@ -168,7 +203,7 @@ async function ensureStarterCloudData(userId: string) {
 }
 
 async function ensureCommunityDeck(userId: string) {
-  await setDoc(doc(deckCollection(userId), COMMUNITY_DECK_ID), COMMUNITY_DECK, { merge: true })
+  await setDocSafe(doc(deckCollection(userId), COMMUNITY_DECK_ID), COMMUNITY_DECK, { merge: true })
 }
 
 async function importCommunityCardsForUser(userId: string): Promise<Card[]> {
@@ -200,7 +235,7 @@ async function importCommunityCardsForUser(userId: string): Promise<Card[]> {
       createdAt: Date.now(),
     }
 
-    batch.set(doc(cardCollection(userId), importedId), importedCard)
+    batch.set(doc(cardCollection(userId), importedId), stripUndefined(importedCard))
     imported.push(importedCard)
   }
 
@@ -234,7 +269,7 @@ async function publishExistingUserCardsToCommunity(user: User) {
       createdAt: Date.now(),
     }
 
-    batch.set(doc(communityCollection(), communityCardId), communityCard, { merge: true })
+    batch.set(doc(communityCollection(), communityCardId), stripUndefined(communityCard), { merge: true })
     count += 1
   }
 
@@ -252,18 +287,18 @@ async function mergeLocalSnapshotIntoCloud(userId: string) {
   const batch = writeBatch(requireCloud())
 
   for (const deck of snapshot.decks) {
-    batch.set(doc(deckCollection(userId), deck.id), deck, { merge: true })
+    batch.set(doc(deckCollection(userId), deck.id), stripUndefined(deck), { merge: true })
   }
 
   for (const card of snapshot.cards) {
-    batch.set(doc(cardCollection(userId), card.id), card, { merge: true })
+    batch.set(doc(cardCollection(userId), card.id), stripUndefined(card), { merge: true })
   }
 
   for (const session of snapshot.sessions) {
-    batch.set(doc(sessionCollection(userId), session.id), session, { merge: true })
+    batch.set(doc(sessionCollection(userId), session.id), stripUndefined(session), { merge: true })
   }
 
-  batch.set(settingsDoc(userId), snapshot.settings, { merge: true })
+  batch.set(settingsDoc(userId), stripUndefined(snapshot.settings), { merge: true })
   await batch.commit()
 }
 
@@ -301,6 +336,9 @@ export async function syncCloudToLocal(user: User) {
     sessions,
     settings,
   })
+
+  // Ensure baseline decks/cards exist locally even if cloud data is partial.
+  await ensureStarterData()
 }
 
 export async function signOutClearLocal() {
@@ -308,19 +346,19 @@ export async function signOutClearLocal() {
 }
 
 export async function upsertDeck(userId: string, deck: Deck) {
-  await setDoc(doc(deckCollection(userId), deck.id), deck)
+  await setDocSafe(doc(deckCollection(userId), deck.id), deck)
 }
 
 export async function upsertCard(userId: string, card: Card) {
-  await setDoc(doc(cardCollection(userId), card.id), card)
+  await setDocSafe(doc(cardCollection(userId), card.id), card)
 }
 
 export async function upsertSession(userId: string, session: Session) {
-  await setDoc(doc(sessionCollection(userId), session.id), session)
+  await setDocSafe(doc(sessionCollection(userId), session.id), session)
 }
 
 export async function upsertSettings(userId: string, settings: Settings) {
-  await setDoc(settingsDoc(userId), settings)
+  await setDocSafe(settingsDoc(userId), settings)
 }
 
 export async function createReviewLog(userId: string, reviewLog: Omit<ReviewLog, 'id'>) {
@@ -340,10 +378,10 @@ export async function publishCardToCommunity(user: User, card: Card): Promise<{ 
     createdAt: Date.now(),
   }
 
-  await setDoc(doc(communityCollection(), communityCardId), communityCard, { merge: true })
+  await setDocSafe(doc(communityCollection(), communityCardId), communityCard, { merge: true })
 
   const communityDeckCard = makeCommunityDeckCard(card, communityCardId)
-  await setDoc(doc(cardCollection(user.uid), communityDeckCard.id), communityDeckCard, { merge: true })
+  await setDocSafe(doc(cardCollection(user.uid), communityDeckCard.id), communityDeckCard, { merge: true })
 
   return { communityCardId, communityDeckCard }
 }

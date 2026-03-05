@@ -31,7 +31,7 @@ function stateToFSRSCard(state: FSRSState): FSRSCard {
 }
 
 function fsrsCardToState(card: FSRSCard): FSRSState {
-  return {
+  const state: FSRSState = {
     due: card.due.getTime(),
     stability: card.stability,
     difficulty: card.difficulty,
@@ -40,8 +40,13 @@ function fsrsCardToState(card: FSRSCard): FSRSState {
     reps: card.reps,
     lapses: card.lapses,
     state: card.state as 0 | 1 | 2 | 3,
-    last_review: card.last_review?.getTime(),
   }
+
+  if (card.last_review) {
+    state.last_review = card.last_review.getTime()
+  }
+
+  return state
 }
 
 export function getInitialFSRSState(): FSRSState {

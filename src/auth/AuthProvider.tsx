@@ -12,6 +12,7 @@ import {
   syncCloudToLocal,
   type UserProfile,
 } from '../lib/cloudStore'
+import { ensureStarterData } from '../db/seeds'
 import { AuthContext, type AuthContextValue } from './context'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -60,6 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (bootstrapError) {
         console.error('Failed to sync cloud data', bootstrapError)
         if (!cancelled) {
+          // Fall back to local baseline so new users never see an empty app.
+          await ensureStarterData()
           setError('Could not sync your cloud data. Please try refreshing.')
         }
       } finally {
