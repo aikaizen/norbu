@@ -4,7 +4,7 @@ import { db } from '../db'
 import { getInitialFSRSState } from '../lib/fsrs'
 import { nanoid } from '../lib/utils'
 import { useAuth } from '../auth/useAuth'
-import { COMMUNITY_DECK_ID, publishCardToCommunity, upsertCard } from '../lib/cloudStore'
+import { publishCardToCommunity, upsertCard } from '../lib/cloudStore'
 import type { Card } from '../db/schema'
 
 interface Props {
@@ -41,11 +41,9 @@ export function CardForm({ deckId: initialDeckId, onDone }: Props) {
       await upsertCard(user.uid, card)
     }
 
-    let totalAdded = 1
-    if (user && selectedDeckId !== COMMUNITY_DECK_ID) {
-      const { communityDeckCard } = await publishCardToCommunity(user, card)
-      await db.cards.put(communityDeckCard)
-      totalAdded += 1
+    const totalAdded = 1
+    if (user) {
+      await publishCardToCommunity(user, card)
     }
 
     setTibetan('')
@@ -118,9 +116,7 @@ export function CardForm({ deckId: initialDeckId, onDone }: Props) {
           ))}
         </div>
       </div>
-      <p className="text-xs text-stone-500 dark:text-stone-400">
-        New cards are automatically added to Community Cards.
-      </p>
+      <p className="text-xs text-stone-500 dark:text-stone-400">New cards are published to Community.</p>
       <div className="flex items-center gap-2 justify-between pt-1">
         <div>
           {added > 0 && (

@@ -9,10 +9,13 @@
 - Added local starter-data backfill so users do not land in empty states.
 
 ### Changed
-- Community card propagation is now deck-aware:
-  - published community cards now include source deck metadata.
-  - imported shared cards are placed into deterministic deck mappings for all users.
-- Batch write operations now chunk at safe limits to avoid Firestore batch-size failures when card volume grows.
+- Removed automatic `Community Cards` deck imports from user libraries.
+- Added a dedicated Community section (`/community`) for discovery/import flows.
+- Community now supports explicit actions:
+  - import an entire community deck (with cards),
+  - add community cards to one of your existing decks.
+- Legacy `Community Cards` deck/card artifacts are filtered out during sync.
+- Batch write operations are chunked at safe limits to avoid Firestore batch-size failures when card volume grows.
 
 ### Added
 - Regression tests for starter seed safety and starter backfill behavior.

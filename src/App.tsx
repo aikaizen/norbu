@@ -7,6 +7,7 @@ import { hasFirebaseConfig } from './lib/firebase'
 
 const Home = lazy(async () => import('./pages/Home').then((m) => ({ default: m.Home })))
 const Decks = lazy(async () => import('./pages/Decks').then((m) => ({ default: m.Decks })))
+const Community = lazy(async () => import('./pages/Community').then((m) => ({ default: m.Community })))
 const DeckDetail = lazy(async () => import('./pages/DeckDetail').then((m) => ({ default: m.DeckDetail })))
 const Review = lazy(async () => import('./pages/Review').then((m) => ({ default: m.Review })))
 const Sessions = lazy(async () => import('./pages/Sessions').then((m) => ({ default: m.Sessions })))
@@ -34,6 +35,7 @@ export default function App() {
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
             <Route path="/decks" element={<Decks />} />
+            <Route path="/community" element={<Community />} />
             <Route path="/decks/:deckId" element={<DeckDetail />} />
             <Route path="/decks/:deckId/review/:mode" element={<Review />} />
             <Route path="/sessions" element={<Sessions />} />

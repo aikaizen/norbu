@@ -1,6 +1,6 @@
 # Norbu
 
-Norbu is a Tibetan flashcard trainer with spaced repetition (FSRS), Google sign-in, cloud sync, and a shared Community Cards deck.
+Norbu is a Tibetan flashcard trainer with spaced repetition (FSRS), Google sign-in, cloud sync, and a Community discovery section.
 
 ## Stack
 
@@ -46,10 +46,13 @@ npm run dev
 
 On login, the app syncs Firestore -> Dexie. Writes (decks/cards/reviews/sessions/settings) are mirrored back to Firestore.
 
-## Community Cards
+## Community
 
-All user-created cards are automatically published to `communityCards` with source deck metadata.
-During sync, shared cards are imported for every user and mapped into deterministic shared decks.
+User-created cards are published to `communityCards` with source deck metadata.
+Community data is browsed in-app from the dedicated Community section, where users can:
+- discover profiles/decks/cards
+- import full decks
+- add community cards into one of their own decks
 
 See the project change history in [`CHANGELOG.md`](/Users/adilislam/Desktop/tibetan/norbu/CHANGELOG.md).
 
