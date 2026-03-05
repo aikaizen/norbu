@@ -1,21 +1,30 @@
 import { useState } from 'react'
 import { db } from '../db'
 import { nanoid } from '../lib/utils'
+import { useAuth } from '../auth/useAuth'
+import { upsertDeck } from '../lib/cloudStore'
+import type { Deck } from '../db/schema'
 
 export function DeckForm({ onDone }: { onDone: () => void }) {
   const [name, setName] = useState('')
   const [desc, setDesc] = useState('')
+  const { user } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
-    await db.decks.add({
+    const deck: Deck = {
       id: nanoid(),
       name: name.trim(),
       language: 'tibetan',
       description: desc.trim(),
       createdAt: Date.now(),
-    })
+    }
+
+    await db.decks.add(deck)
+    if (user) {
+      await upsertDeck(user.uid, deck)
+    }
     onDone()
   }
 

@@ -1,15 +1,19 @@
 import { useState } from 'react'
 import { db } from '../db'
 import { nanoid } from '../lib/utils'
+import { useAuth } from '../auth/useAuth'
+import { upsertSession } from '../lib/cloudStore'
+import type { Session } from '../db/schema'
 
 export function SessionForm({ onDone }: { onDone: () => void }) {
   const [notes, setNotes] = useState('')
   const [isTutor, setIsTutor] = useState(false)
   const [duration, setDuration] = useState('')
+  const { user } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await db.sessions.add({
+    const session: Session = {
       id: nanoid(),
       date: new Date().toISOString().split('T')[0],
       notes: notes.trim(),
@@ -17,7 +21,11 @@ export function SessionForm({ onDone }: { onDone: () => void }) {
       cardsReviewed: [],
       duration: parseInt(duration) || 0,
       createdAt: Date.now(),
-    })
+    }
+    await db.sessions.add(session)
+    if (user) {
+      await upsertSession(user.uid, session)
+    }
     onDone()
   }
 

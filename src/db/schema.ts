@@ -19,6 +19,7 @@ export interface CardFront {
 export interface Card {
   id: string
   deckId: string
+  sourceCommunityId?: string
   front: CardFront
   tags: string[]
   audioUrl?: string

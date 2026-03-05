@@ -9,7 +9,6 @@ export function DiamondPop({ show }: Props) {
     <AnimatePresence>
       {show && (
         <motion.div
-          key={Date.now()}
           initial={{ opacity: 0, scale: 0.5, y: 0 }}
           animate={{ opacity: 1, scale: 1.3, y: -16 }}
           exit={{ opacity: 0, y: -32 }}

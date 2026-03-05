@@ -3,6 +3,9 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { getInitialFSRSState } from '../lib/fsrs'
 import { nanoid } from '../lib/utils'
+import { useAuth } from '../auth/useAuth'
+import { COMMUNITY_DECK_ID, publishCardToCommunity, upsertCard } from '../lib/cloudStore'
+import type { Card } from '../db/schema'
 
 interface Props {
   deckId?: string
@@ -17,11 +20,12 @@ export function CardForm({ deckId: initialDeckId, onDone }: Props) {
   const [english, setEnglish] = useState('')
   const [difficulty, setDifficulty] = useState(1)
   const [added, setAdded] = useState(0)
+  const { user } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedDeckId || !tibetan.trim() || !english.trim()) return
-    await db.cards.add({
+    const card: Card = {
       id: nanoid(),
       deckId: selectedDeckId,
       front: { tibetan: tibetan.trim(), phonetic: phonetic.trim(), english: english.trim() },
@@ -30,11 +34,24 @@ export function CardForm({ deckId: initialDeckId, onDone }: Props) {
       fsrsPhonetics: getInitialFSRSState(),
       fsrsMeaning: getInitialFSRSState(),
       createdAt: Date.now(),
-    })
+    }
+
+    await db.cards.add(card)
+    if (user) {
+      await upsertCard(user.uid, card)
+    }
+
+    let totalAdded = 1
+    if (user && selectedDeckId !== COMMUNITY_DECK_ID) {
+      const { communityDeckCard } = await publishCardToCommunity(user, card)
+      await db.cards.put(communityDeckCard)
+      totalAdded += 1
+    }
+
     setTibetan('')
     setPhonetic('')
     setEnglish('')
-    setAdded((n) => n + 1)
+    setAdded((n) => n + totalAdded)
   }
 
   return (
@@ -101,6 +118,9 @@ export function CardForm({ deckId: initialDeckId, onDone }: Props) {
           ))}
         </div>
       </div>
+      <p className="text-xs text-stone-500 dark:text-stone-400">
+        New cards are automatically added to Community Cards.
+      </p>
       <div className="flex items-center gap-2 justify-between pt-1">
         <div>
           {added > 0 && (

@@ -2,16 +2,20 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
-import { seedIfEmpty } from './db/seeds'
+import { AuthProvider } from './auth/AuthProvider'
 
 if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
   document.documentElement.classList.add('dark')
 }
 
-seedIfEmpty().then(() => {
+function mountApp() {
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </React.StrictMode>
   )
-})
+}
+
+mountApp()

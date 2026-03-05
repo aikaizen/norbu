@@ -3,13 +3,16 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import { scheduleCard, type RatingKey } from '../lib/fsrs'
 import { addDiamond, earnsEasyDiamond, earnsGoodDiamond } from '../lib/diamonds'
-import type { Card } from '../db/schema'
+import type { Card, ReviewLog } from '../db/schema'
+import { createReviewLog, upsertCard, upsertSettings } from '../lib/cloudStore'
+import { useAuth } from '../auth/useAuth'
 
 export type ReviewMode = 'phonetics' | 'meaning'
 
 export function useReviewSession(deckId: string, mode: ReviewMode) {
   const [reviewed, setReviewed] = useState<string[]>([])
   const field = mode === 'phonetics' ? 'fsrsPhonetics' : 'fsrsMeaning'
+  const { user } = useAuth()
 
   const dueCards = useLiveQuery(async () => {
     const now = Date.now()
@@ -28,14 +31,17 @@ export function useReviewSession(deckId: string, mode: ReviewMode) {
         ? { fsrsPhonetics: newState }
         : { fsrsMeaning: newState }
     await db.cards.update(card.id, update)
+    const nextCard = { ...card, ...update }
 
-    await db.reviewLogs.add({
+    const reviewLog: Omit<ReviewLog, 'id'> = {
       cardId: card.id,
       mode,
       answer,
       rating,
       timestamp: Date.now(),
-    })
+    }
+
+    await db.reviewLogs.add(reviewLog)
 
     setReviewed((prev) => [...prev, card.id])
 
@@ -47,8 +53,22 @@ export function useReviewSession(deckId: string, mode: ReviewMode) {
           : false
 
     if (earned) await addDiamond()
+
+    if (user) {
+      await Promise.all([
+        upsertCard(user.uid, nextCard),
+        createReviewLog(user.uid, reviewLog),
+      ])
+
+      if (earned) {
+        const settings = await db.settings.get('singleton')
+        if (settings) {
+          await upsertSettings(user.uid, settings)
+        }
+      }
+    }
     return earned
-  }, [field, mode])
+  }, [field, mode, user])
 
   return {
     currentCard,
