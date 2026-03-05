@@ -243,28 +243,6 @@ async function publishExistingUserCardsToCommunity(user: User) {
   }
 }
 
-async function ensureStarterCardsInCommunity() {
-  const starters = getStarterCards()
-  if (starters.length === 0) return
-
-  const batch = writeBatch(requireCloud())
-  for (const card of starters) {
-    const communityCardId = `system-${card.id}`
-    const communityCard: CommunityCard = {
-      id: communityCardId,
-      sourceCardId: card.id,
-      authorId: 'system',
-      authorName: 'Norbu',
-      front: card.front,
-      tags: card.tags,
-      difficulty: card.difficulty,
-      createdAt: card.createdAt,
-    }
-    batch.set(doc(communityCollection(), communityCardId), communityCard, { merge: true })
-  }
-  await batch.commit()
-}
-
 async function mergeLocalSnapshotIntoCloud(userId: string) {
   const snapshot = await getLocalDataSnapshot()
   if (snapshot.decks.length === 0 && snapshot.cards.length === 0 && snapshot.sessions.length === 0) {
@@ -291,12 +269,17 @@ async function mergeLocalSnapshotIntoCloud(userId: string) {
 
 export async function syncCloudToLocal(user: User) {
   const userId = user.uid
-  await ensureStarterCardsInCommunity()
   await mergeLocalSnapshotIntoCloud(userId)
   await ensureStarterCloudData(userId)
   await ensureCommunityDeck(userId)
-  await publishExistingUserCardsToCommunity(user)
-  await importCommunityCardsForUser(userId)
+
+  try {
+    await publishExistingUserCardsToCommunity(user)
+    await importCommunityCardsForUser(userId)
+  } catch (communitySyncError) {
+    // Community sync is optional; baseline decks/cards must still load.
+    console.warn('Community sync failed. Continuing with baseline decks.', communitySyncError)
+  }
 
   const [deckSnap, cardSnap, sessionSnap, settingsSnap] = await Promise.all([
     getDocs(query(deckCollection(userId))),
