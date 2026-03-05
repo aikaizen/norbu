@@ -10,6 +10,7 @@ import {
   query,
   setDoc,
   type SetOptions,
+  type WriteBatch,
   writeBatch,
 } from 'firebase/firestore'
 import { dbCloud } from './firebase'
@@ -19,6 +20,8 @@ import { ensureStarterData, STARTER_DECKS, getStarterCards } from '../db/seeds'
 import { getInitialFSRSState } from './fsrs'
 
 export const COMMUNITY_DECK_ID = 'deck-community-cards'
+const MAX_BATCH_WRITES = 450
+const STARTER_DECK_IDS = new Set(STARTER_DECKS.map((deck) => deck.id))
 
 const COMMUNITY_DECK: Deck = {
   id: COMMUNITY_DECK_ID,
@@ -42,6 +45,9 @@ interface CommunityCard {
   authorId: string
   authorName: string
   sourceCardId: string
+  sourceDeckId?: string
+  sourceDeckName?: string
+  sourceDeckDescription?: string
   front: Card['front']
   tags: string[]
   difficulty: number
@@ -78,6 +84,37 @@ async function setDocSafe<T extends DocumentData>(
     return
   }
   await setDoc(reference, cleanData)
+}
+
+async function commitWriteOperations(operations: Array<(batch: WriteBatch) => void>) {
+  if (operations.length === 0) return
+
+  const cloud = requireCloud()
+  for (let i = 0; i < operations.length; i += MAX_BATCH_WRITES) {
+    const batch = writeBatch(cloud)
+    const chunk = operations.slice(i, i + MAX_BATCH_WRITES)
+    for (const operation of chunk) {
+      operation(batch)
+    }
+    await batch.commit()
+  }
+}
+
+function toSharedDeckId(sourceDeckId: string) {
+  if (STARTER_DECK_IDS.has(sourceDeckId) || sourceDeckId === COMMUNITY_DECK_ID) {
+    return sourceDeckId
+  }
+  if (sourceDeckId.startsWith('shared-')) {
+    return sourceDeckId
+  }
+  return `shared-${sourceDeckId}`
+}
+
+function getCommunitySourceDeckId(communityCard: CommunityCard) {
+  if (communityCard.sourceDeckId) return communityCard.sourceDeckId
+  if (communityCard.sourceCardId.startsWith('alphabet-')) return 'deck-alphabet'
+  if (communityCard.sourceCardId.startsWith('sadhana-')) return 'deck-sadhana-core'
+  return COMMUNITY_DECK_ID
 }
 
 function requireCloud() {
@@ -207,25 +244,48 @@ async function ensureCommunityDeck(userId: string) {
 }
 
 async function importCommunityCardsForUser(userId: string): Promise<Card[]> {
-  const [communitySnap, cardSnap] = await Promise.all([
+  const [communitySnap, cardSnap, deckSnap] = await Promise.all([
     getDocs(query(communityCollection())),
     getDocs(query(cardCollection(userId))),
+    getDocs(query(deckCollection(userId))),
   ])
 
   if (communitySnap.empty) return []
 
-  const existingIds = new Set(cardSnap.docs.map((d) => d.id))
-  const batch = writeBatch(requireCloud())
+  const existingCardIds = new Set(cardSnap.docs.map((d) => d.id))
+  const existingDeckIds = new Set(deckSnap.docs.map((d) => d.id))
+  const operations: Array<(batch: WriteBatch) => void> = []
   const imported: Card[] = []
 
   for (const docSnap of communitySnap.docs) {
     const community = docSnap.data() as CommunityCard
+    if (community.authorId === userId) continue
+
     const importedId = toImportedCommunityCardId(community.id)
-    if (existingIds.has(importedId)) continue
+    if (existingCardIds.has(importedId)) continue
+
+    const sourceDeckId = getCommunitySourceDeckId(community)
+    const targetDeckId = toSharedDeckId(sourceDeckId)
+
+    if (!existingDeckIds.has(targetDeckId)) {
+      const starterDeck = STARTER_DECKS.find((deck) => deck.id === sourceDeckId)
+      const fallbackName = community.sourceDeckName?.trim() || 'Shared Deck'
+      const deckName = starterDeck ? starterDeck.name : `Shared: ${fallbackName}`
+      const deckDescription = community.sourceDeckDescription?.trim() || `Shared cards from ${community.authorName}`
+      const deck: Deck = {
+        id: targetDeckId,
+        name: deckName,
+        language: 'tibetan',
+        description: deckDescription,
+        createdAt: Date.now(),
+      }
+      operations.push((batch) => batch.set(doc(deckCollection(userId), targetDeckId), stripUndefined(deck), { merge: true }))
+      existingDeckIds.add(targetDeckId)
+    }
 
     const importedCard: Card = {
       id: importedId,
-      deckId: COMMUNITY_DECK_ID,
+      deckId: targetDeckId,
       sourceCommunityId: community.id,
       front: community.front,
       tags: Array.from(new Set([...community.tags, 'community'])),
@@ -235,32 +295,38 @@ async function importCommunityCardsForUser(userId: string): Promise<Card[]> {
       createdAt: Date.now(),
     }
 
-    batch.set(doc(cardCollection(userId), importedId), stripUndefined(importedCard))
+    operations.push((batch) => batch.set(doc(cardCollection(userId), importedId), stripUndefined(importedCard)))
+    existingCardIds.add(importedId)
     imported.push(importedCard)
   }
 
-  if (imported.length > 0) {
-    await batch.commit()
-  }
+  await commitWriteOperations(operations)
 
   return imported
 }
 
 async function publishExistingUserCardsToCommunity(user: User) {
-  const cardsSnap = await getDocs(query(cardCollection(user.uid)))
+  const [cardsSnap, decksSnap] = await Promise.all([
+    getDocs(query(cardCollection(user.uid))),
+    getDocs(query(deckCollection(user.uid))),
+  ])
   if (cardsSnap.empty) return
 
-  const batch = writeBatch(requireCloud())
-  let count = 0
+  const deckById = new Map(decksSnap.docs.map((deck) => [deck.id, deck.data() as Deck]))
+  const operations: Array<(batch: WriteBatch) => void> = []
 
   for (const cardDoc of cardsSnap.docs) {
     const card = cardDoc.data() as Card
     if (isImportedCommunityCard(card)) continue
 
+    const sourceDeck = deckById.get(card.deckId)
     const communityCardId = toCommunityCardId(user.uid, card.id)
     const communityCard: CommunityCard = {
       id: communityCardId,
       sourceCardId: card.id,
+      sourceDeckId: card.deckId,
+      sourceDeckName: sourceDeck?.name ?? 'Shared Deck',
+      sourceDeckDescription: sourceDeck?.description ?? '',
       authorId: user.uid,
       authorName: user.displayName ?? user.email ?? 'Norbu Student',
       front: card.front,
@@ -269,13 +335,10 @@ async function publishExistingUserCardsToCommunity(user: User) {
       createdAt: Date.now(),
     }
 
-    batch.set(doc(communityCollection(), communityCardId), stripUndefined(communityCard), { merge: true })
-    count += 1
+    operations.push((batch) => batch.set(doc(communityCollection(), communityCardId), stripUndefined(communityCard), { merge: true }))
   }
 
-  if (count > 0) {
-    await batch.commit()
-  }
+  await commitWriteOperations(operations)
 }
 
 async function mergeLocalSnapshotIntoCloud(userId: string) {
@@ -284,22 +347,22 @@ async function mergeLocalSnapshotIntoCloud(userId: string) {
     return
   }
 
-  const batch = writeBatch(requireCloud())
+  const operations: Array<(batch: WriteBatch) => void> = []
 
   for (const deck of snapshot.decks) {
-    batch.set(doc(deckCollection(userId), deck.id), stripUndefined(deck), { merge: true })
+    operations.push((batch) => batch.set(doc(deckCollection(userId), deck.id), stripUndefined(deck), { merge: true }))
   }
 
   for (const card of snapshot.cards) {
-    batch.set(doc(cardCollection(userId), card.id), stripUndefined(card), { merge: true })
+    operations.push((batch) => batch.set(doc(cardCollection(userId), card.id), stripUndefined(card), { merge: true }))
   }
 
   for (const session of snapshot.sessions) {
-    batch.set(doc(sessionCollection(userId), session.id), stripUndefined(session), { merge: true })
+    operations.push((batch) => batch.set(doc(sessionCollection(userId), session.id), stripUndefined(session), { merge: true }))
   }
 
-  batch.set(settingsDoc(userId), stripUndefined(snapshot.settings), { merge: true })
-  await batch.commit()
+  operations.push((batch) => batch.set(settingsDoc(userId), stripUndefined(snapshot.settings), { merge: true }))
+  await commitWriteOperations(operations)
 }
 
 export async function syncCloudToLocal(user: User) {
@@ -366,10 +429,15 @@ export async function createReviewLog(userId: string, reviewLog: Omit<ReviewLog,
 }
 
 export async function publishCardToCommunity(user: User, card: Card): Promise<{ communityCardId: string; communityDeckCard: Card }> {
+  const sourceDeckSnap = await getDoc(doc(deckCollection(user.uid), card.deckId))
+  const sourceDeck = sourceDeckSnap.exists() ? (sourceDeckSnap.data() as Deck) : null
   const communityCardId = toCommunityCardId(user.uid, card.id)
   const communityCard: CommunityCard = {
     id: communityCardId,
     sourceCardId: card.id,
+    sourceDeckId: card.deckId,
+    sourceDeckName: sourceDeck?.name ?? 'Shared Deck',
+    sourceDeckDescription: sourceDeck?.description ?? '',
     authorId: user.uid,
     authorName: user.displayName ?? user.email ?? 'Norbu Student',
     front: card.front,

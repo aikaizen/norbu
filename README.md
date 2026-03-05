@@ -48,7 +48,10 @@ On login, the app syncs Firestore -> Dexie. Writes (decks/cards/reviews/sessions
 
 ## Community Cards
 
-All user-created cards are automatically published to `communityCards` and copied into each user's `Community Cards` deck during sync.
+All user-created cards are automatically published to `communityCards` with source deck metadata.
+During sync, shared cards are imported for every user and mapped into deterministic shared decks.
+
+See the project change history in [`CHANGELOG.md`](/Users/adilislam/Desktop/tibetan/norbu/CHANGELOG.md).
 
 ## Deploy
 
