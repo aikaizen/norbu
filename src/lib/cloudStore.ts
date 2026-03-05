@@ -133,22 +133,38 @@ export async function ensureProfile(user: User): Promise<UserProfile> {
 }
 
 async function ensureStarterCloudData(userId: string) {
-  const deckSnap = await getDocs(query(deckCollection(userId)))
-  if (!deckSnap.empty) return
+  const [deckSnap, cardSnap, settingsSnap] = await Promise.all([
+    getDocs(query(deckCollection(userId))),
+    getDocs(query(cardCollection(userId))),
+    getDoc(settingsDoc(userId)),
+  ])
 
+  const existingDeckIds = new Set(deckSnap.docs.map((d) => d.id))
+  const existingCardIds = new Set(cardSnap.docs.map((d) => d.id))
   const batch = writeBatch(requireCloud())
   const starterDecks = [...STARTER_DECKS, COMMUNITY_DECK]
+  let writes = 0
 
   for (const deck of starterDecks) {
+    if (existingDeckIds.has(deck.id)) continue
     batch.set(doc(deckCollection(userId), deck.id), deck)
+    writes += 1
   }
 
   for (const card of getStarterCards()) {
+    if (existingCardIds.has(card.id)) continue
     batch.set(doc(cardCollection(userId), card.id), card)
+    writes += 1
   }
 
-  batch.set(settingsDoc(userId), { id: 'singleton', diamonds: 0 } satisfies Settings)
-  await batch.commit()
+  if (!settingsSnap.exists()) {
+    batch.set(settingsDoc(userId), { id: 'singleton', diamonds: 0 } satisfies Settings)
+    writes += 1
+  }
+
+  if (writes > 0) {
+    await batch.commit()
+  }
 }
 
 async function ensureCommunityDeck(userId: string) {
