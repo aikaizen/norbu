@@ -5,6 +5,7 @@
 ### Added
 - Added a new app section for curriculum planning at `/curriculum`.
 - Added official packet integration planning to the roadmap (`TODO.md`).
+- Added Norbu logo asset and integrated branding into auth/home/layout.
 
 ### Verified
 - Ran full validation on current `main`:

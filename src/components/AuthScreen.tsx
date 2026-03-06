@@ -1,3 +1,5 @@
+import { BrandLogo } from './BrandLogo'
+
 interface AuthScreenProps {
   mode: 'config' | 'signin'
   onSignIn?: () => Promise<void>
@@ -9,8 +11,8 @@ export function AuthScreen({ mode, onSignIn, error }: AuthScreenProps) {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-6 space-y-4">
         <div>
-          <h1 className="text-2xl font-semibold">Norbu</h1>
-          <p className="text-sm text-stone-500 mt-1">Sign in to sync your decks and progress across devices.</p>
+          <BrandLogo sizeClassName="h-16" />
+          <p className="text-sm text-stone-500 mt-3">Sign in to sync your decks and progress across devices.</p>
         </div>
 
         {mode === 'config' ? (

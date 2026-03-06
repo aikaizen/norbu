@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useDecksWithDue } from '../hooks/useDecksWithDue'
 import { useDiamonds } from '../hooks/useDiamonds'
 import { CardForm } from '../components/CardForm'
+import { BrandLogo } from '../components/BrandLogo'
 
 export function Home() {
   const decks = useDecksWithDue()
@@ -12,10 +13,7 @@ export function Home() {
   return (
     <div className="space-y-8">
       <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Norbu</h1>
-          <p className="text-stone-500 dark:text-stone-400 mt-1 text-sm">ནོར་བུ — jewel</p>
-        </div>
+        <BrandLogo sizeClassName="h-16" />
         <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-semibold text-lg pt-1">
           <span>◆</span>
           <span>{diamonds}</span>
