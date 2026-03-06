@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-03-06
+
+### Verified
+- Ran full validation on current `main`:
+  - `npm run lint`
+  - `npm run test -- --run`
+  - `npm run build`
+- Validation status: all checks passed.
+
+### Added
+- Added structured upgrade roadmap in [`TODO.md`](/Users/adilislam/Desktop/tibetan/norbu/TODO.md) with two tracks:
+  - curriculum
+  - ux
+
 ## 2026-03-05
 
 ### Fixed
