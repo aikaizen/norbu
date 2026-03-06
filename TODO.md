@@ -36,3 +36,25 @@
    - sync status indicator,
    - last successful cloud sync timestamp,
    - explicit error banner with retry action.
+
+## Official Packet (Tibetan Language Hand Out Packet.pdf)
+1. OCR and structure:
+   - run OCR for all 29 pages,
+   - split content by packet units/sections,
+   - store as versioned source JSON (`packet_version`, `unit`, `page_ref`).
+2. Curriculum mapping:
+   - create packet-aligned decks and units,
+   - assign lesson order and prerequisites,
+   - tag cards with source page references for traceability.
+3. Content generation:
+   - generate cards for letters, core vocabulary, and example phrases,
+   - create unit checkpoint quizzes from packet exercises,
+   - add distractor pools for meaning/phonetic recall.
+4. Quality control:
+   - add reviewer workflow for transliteration and meaning accuracy,
+   - deduplicate near-identical packet cards,
+   - lock approved canonical cards and version updates.
+5. Product integration:
+   - show a learner-facing “Packet Path” in Curriculum,
+   - unlock unit-by-unit progression,
+   - report mastery and retention per packet unit.

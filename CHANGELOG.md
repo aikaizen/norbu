@@ -2,6 +2,10 @@
 
 ## 2026-03-06
 
+### Added
+- Added a new app section for curriculum planning at `/curriculum`.
+- Added official packet integration planning to the roadmap (`TODO.md`).
+
 ### Verified
 - Ran full validation on current `main`:
   - `npm run lint`
