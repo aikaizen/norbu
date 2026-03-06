@@ -1,12 +1,12 @@
 import { db } from '../db'
 
 export async function addDiamond(): Promise<void> {
-  const settings = await db.settings.get('singleton')
-  if (!settings) {
+  const count = await db.settings.where('id').equals('singleton').modify((s) => {
+    s.diamonds += 1
+  })
+  if (count === 0) {
     await db.settings.put({ id: 'singleton', diamonds: 1 })
-    return
   }
-  await db.settings.put({ ...settings, diamonds: settings.diamonds + 1 })
 }
 
 export function earnsEasyDiamond(): boolean {

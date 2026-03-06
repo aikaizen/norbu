@@ -38,13 +38,15 @@ const letters = [
 
 export const ALPHABET_DECK_ID = DECK_ID
 
-export const alphabetCards: Card[] = letters.map((l, i) => ({
-  id: `alphabet-${i + 1}`,
-  deckId: DECK_ID,
-  front: l,
-  tags: ['alphabet'],
-  difficulty: 1,
-  fsrsPhonetics: getInitialFSRSState(),
-  fsrsMeaning: getInitialFSRSState(),
-  createdAt: Date.now(),
-}))
+export function getAlphabetCards(): Card[] {
+  return letters.map((l, i) => ({
+    id: `alphabet-${i + 1}`,
+    deckId: DECK_ID,
+    front: l,
+    tags: ['alphabet'],
+    difficulty: 1,
+    fsrsPhonetics: getInitialFSRSState(),
+    fsrsMeaning: getInitialFSRSState(),
+    createdAt: Date.now(),
+  }))
+}

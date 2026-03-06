@@ -9,7 +9,7 @@ export function SessionForm({ onDone }: { onDone: () => void }) {
   const [notes, setNotes] = useState('')
   const [isTutor, setIsTutor] = useState(false)
   const [duration, setDuration] = useState('')
-  const { user } = useAuth()
+  const { user, effectiveUserId } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,8 +23,8 @@ export function SessionForm({ onDone }: { onDone: () => void }) {
       createdAt: Date.now(),
     }
     await db.sessions.add(session)
-    if (user) {
-      await upsertSession(user.uid, session)
+    if (user && effectiveUserId) {
+      await upsertSession(effectiveUserId, session)
     }
     onDone()
   }
@@ -37,7 +37,7 @@ export function SessionForm({ onDone }: { onDone: () => void }) {
           id="tutor"
           checked={isTutor}
           onChange={(e) => setIsTutor(e.target.checked)}
-          className="accent-amber-700"
+          className="accent-saffron-600"
         />
         <label htmlFor="tutor" className="text-sm">Tutor session</label>
       </div>
@@ -46,7 +46,7 @@ export function SessionForm({ onDone }: { onDone: () => void }) {
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="w-full rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+          className="w-full rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-saffron-400 resize-none"
           rows={4}
           placeholder="What did you work on? What was hard? What to follow up on..."
         />
@@ -57,13 +57,13 @@ export function SessionForm({ onDone }: { onDone: () => void }) {
           type="number"
           value={duration}
           onChange={(e) => setDuration(e.target.value)}
-          className="w-24 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className="w-24 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-saffron-400"
           placeholder="30"
         />
       </div>
       <div className="flex gap-2 justify-end">
         <button type="button" onClick={onDone} className="px-3 py-1.5 text-sm text-stone-500">Cancel</button>
-        <button type="submit" className="px-3 py-1.5 text-sm rounded-lg bg-amber-700 text-white hover:bg-amber-800">Save</button>
+        <button type="submit" className="px-3 py-1.5 text-sm rounded-lg bg-saffron-600 text-white hover:bg-saffron-700 transition-colors">Save</button>
       </div>
     </form>
   )

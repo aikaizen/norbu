@@ -28,12 +28,15 @@ function ActiveReviewCard({ card, mode, rateCard, onEarnedDiamond }: ActiveRevie
   const [isFlipped, setIsFlipped] = useState(false)
   const [hintUsed, setHintUsed] = useState(false)
   const [answer, setAnswer] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const field = mode === 'phonetics' ? 'fsrsPhonetics' : 'fsrsMeaning'
   const intervals = getSchedulePreview(card[field])
   const hint = getHint(mode, card.front.phonetic, card.front.english)
 
   const handleRate = async (rating: RatingKey) => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
     const earned = await rateCard(card, rating, answer)
     if (earned) {
       onEarnedDiamond()
@@ -62,7 +65,7 @@ function ActiveReviewCard({ card, mode, rateCard, onEarnedDiamond }: ActiveRevie
             <input
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
-              className="flex-1 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="flex-1 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-saffron-400"
               placeholder={mode === 'phonetics' ? 'Type the pronunciation...' : 'Type the meaning...'}
               autoFocus
             />
@@ -119,14 +122,14 @@ export function Review() {
   if (isDone) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center">
-        <div className="text-5xl">◈</div>
-        <h2 className="text-2xl font-semibold">All done!</h2>
-        <p className="text-stone-500">
+        <div className="text-5xl text-saffron-500">◈</div>
+        <h2 className="text-2xl font-bold text-stone-800 dark:text-stone-100">All done!</h2>
+        <p className="text-stone-400 dark:text-stone-500">
           You reviewed {reviewed} card{reviewed !== 1 ? 's' : ''} — {modeLabel}.
         </p>
         <Link
           to="/"
-          className="rounded-xl bg-amber-700 text-white px-6 py-3 text-sm font-medium hover:bg-amber-800 transition-colors"
+          className="rounded-xl bg-saffron-600 text-white px-6 py-3 text-sm font-semibold hover:bg-saffron-700 transition-colors"
         >
           Back to home
         </Link>
@@ -154,7 +157,7 @@ export function Review() {
 
       <div className="h-1 bg-stone-100 dark:bg-stone-800 rounded-full overflow-hidden">
         <div
-          className="h-full bg-amber-600 transition-all duration-500"
+          className="h-full bg-saffron-500 transition-all duration-500"
           style={{
             width: `${reviewed + remaining > 0 ? (reviewed / (reviewed + remaining)) * 100 : 0}%`,
           }}

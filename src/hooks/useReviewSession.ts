@@ -12,7 +12,7 @@ export type ReviewMode = 'phonetics' | 'meaning'
 export function useReviewSession(deckId: string, mode: ReviewMode) {
   const [reviewed, setReviewed] = useState<string[]>([])
   const field = mode === 'phonetics' ? 'fsrsPhonetics' : 'fsrsMeaning'
-  const { user } = useAuth()
+  const { user, effectiveUserId } = useAuth()
 
   const dueCards = useLiveQuery(async () => {
     const now = Date.now()
@@ -54,21 +54,21 @@ export function useReviewSession(deckId: string, mode: ReviewMode) {
 
     if (earned) await addDiamond()
 
-    if (user) {
+    if (user && effectiveUserId) {
       await Promise.all([
-        upsertCard(user.uid, nextCard),
-        createReviewLog(user.uid, reviewLog),
+        upsertCard(effectiveUserId, nextCard),
+        createReviewLog(effectiveUserId, reviewLog),
       ])
 
       if (earned) {
         const settings = await db.settings.get('singleton')
         if (settings) {
-          await upsertSettings(user.uid, settings)
+          await upsertSettings(effectiveUserId, settings)
         }
       }
     }
     return earned
-  }, [field, mode, user])
+  }, [field, mode, user, effectiveUserId])
 
   return {
     currentCard,

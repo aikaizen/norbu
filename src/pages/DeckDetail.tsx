@@ -27,13 +27,13 @@ export function DeckDetail() {
         <div className="flex gap-2">
           <Link
             to={`/decks/${deckId}/review/phonetics`}
-            className="text-sm px-3 py-1.5 rounded-lg bg-amber-700 text-white hover:bg-amber-800"
+            className="text-sm px-3 py-1.5 rounded-lg bg-saffron-600 text-white hover:bg-saffron-700 transition-colors"
           >
             Phonetics
           </Link>
           <Link
             to={`/decks/${deckId}/review/meaning`}
-            className="text-sm px-3 py-1.5 rounded-lg border border-amber-700 text-amber-700 dark:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/20"
+            className="text-sm px-3 py-1.5 rounded-lg border border-saffron-600 text-saffron-600 dark:text-saffron-400 hover:bg-saffron-50 dark:hover:bg-saffron-950/20 transition-colors"
           >
             Meanings
           </Link>
@@ -47,14 +47,14 @@ export function DeckDetail() {
       </div>
 
       {showForm && (
-        <div className="rounded-xl border border-stone-200 dark:border-stone-800 p-4">
+        <div className="card-surface p-4">
           <CardForm deckId={deckId!} onDone={() => setShowForm(false)} />
         </div>
       )}
 
       <div className="space-y-2">
         {cards?.map((card) => (
-          <div key={card.id} className="rounded-xl border border-stone-200 dark:border-stone-800 p-4">
+          <div key={card.id} className="card-surface p-4">
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-baseline gap-3">

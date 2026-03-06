@@ -20,7 +20,7 @@ export function CardForm({ deckId: initialDeckId, onDone }: Props) {
   const [english, setEnglish] = useState('')
   const [difficulty, setDifficulty] = useState(1)
   const [added, setAdded] = useState(0)
-  const { user } = useAuth()
+  const { user, role, effectiveUserId } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,13 +37,13 @@ export function CardForm({ deckId: initialDeckId, onDone }: Props) {
     }
 
     await db.cards.add(card)
-    if (user) {
-      await upsertCard(user.uid, card)
+    if (user && effectiveUserId) {
+      await upsertCard(effectiveUserId, card)
     }
 
     const totalAdded = 1
     if (user) {
-      await publishCardToCommunity(user, card)
+      await publishCardToCommunity(user, card, role)
     }
 
     setTibetan('')
@@ -60,7 +60,7 @@ export function CardForm({ deckId: initialDeckId, onDone }: Props) {
           <select
             value={selectedDeckId}
             onChange={(e) => setSelectedDeckId(e.target.value)}
-            className="w-full rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="w-full rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-saffron-400"
           >
             <option value="">Select a deck...</option>
             {decks?.map((d) => (
@@ -74,7 +74,7 @@ export function CardForm({ deckId: initialDeckId, onDone }: Props) {
         <input
           value={tibetan}
           onChange={(e) => setTibetan(e.target.value)}
-          className="w-full rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-3 py-2 font-tibetan text-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className="w-full rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-3 py-2 font-tibetan text-xl focus:outline-none focus:ring-2 focus:ring-saffron-400"
           placeholder="སངས་རྒྱས་"
           dir="ltr"
         />
@@ -84,7 +84,7 @@ export function CardForm({ deckId: initialDeckId, onDone }: Props) {
         <input
           value={phonetic}
           onChange={(e) => setPhonetic(e.target.value)}
-          className="w-full rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className="w-full rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-saffron-400"
           placeholder="sangye"
         />
       </div>
@@ -93,7 +93,7 @@ export function CardForm({ deckId: initialDeckId, onDone }: Props) {
         <input
           value={english}
           onChange={(e) => setEnglish(e.target.value)}
-          className="w-full rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className="w-full rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-saffron-400"
           placeholder="Buddha"
         />
       </div>
@@ -107,7 +107,7 @@ export function CardForm({ deckId: initialDeckId, onDone }: Props) {
               onClick={() => setDifficulty(n)}
               className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
                 difficulty === n
-                  ? 'bg-amber-700 text-white'
+                  ? 'bg-saffron-600 text-white'
                   : 'border border-stone-200 dark:border-stone-700 text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800'
               }`}
             >
@@ -127,7 +127,7 @@ export function CardForm({ deckId: initialDeckId, onDone }: Props) {
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={onDone} className="px-3 py-1.5 text-sm text-stone-500 hover:text-stone-700">Done</button>
-          <button type="submit" className="px-3 py-1.5 text-sm rounded-lg bg-amber-700 text-white hover:bg-amber-800">Add card</button>
+          <button type="submit" className="px-3 py-1.5 text-sm rounded-lg bg-saffron-600 text-white hover:bg-saffron-700 transition-colors">Add card</button>
         </div>
       </div>
     </form>

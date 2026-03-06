@@ -13,8 +13,8 @@ export function BrandLogo({ sizeClassName = 'h-14', showName = true }: BrandLogo
       />
       {showName && (
         <div>
-          <p className="text-2xl font-semibold leading-tight tracking-tight">Norbu</p>
-          <p className="text-sm text-stone-500 dark:text-stone-400">ནོར་བུ — jewel</p>
+          <p className="text-2xl font-bold leading-tight tracking-tight text-stone-800 dark:text-stone-100">Norbu</p>
+          <p className="text-sm font-tibetan text-stone-400 dark:text-stone-500">ནོར་བུ</p>
         </div>
       )}
     </div>

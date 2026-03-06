@@ -25,33 +25,33 @@ export function FlashCard({ card, mode, isFlipped, onFlip, hint }: Props) {
       >
         {/* Front */}
         <div
-          className="w-full rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-10 flex flex-col items-center justify-center min-h-[260px] gap-3"
+          className="w-full rounded-2xl border border-stone-200/60 dark:border-stone-700/60 bg-gradient-to-b from-white to-stone-50 dark:from-stone-900 dark:to-stone-900/80 p-10 flex flex-col items-center justify-center min-h-[280px] gap-3 shadow-card"
           style={{ backfaceVisibility: 'hidden' }}
         >
-          <p className="font-tibetan text-6xl text-stone-900 dark:text-stone-100 leading-relaxed text-center">
+          <p className="font-tibetan text-7xl text-stone-800 dark:text-stone-100 leading-relaxed text-center">
             {card.front.tibetan}
           </p>
           {mode === 'meaning' && (
-            <p className="text-lg text-stone-500 dark:text-stone-400 font-medium">
+            <p className="text-lg text-stone-400 dark:text-stone-500 font-medium">
               {card.front.phonetic}
             </p>
           )}
           {hint && (
-            <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
+            <p className="text-sm text-saffron-600 dark:text-saffron-400 mt-1">
               Hint: {hint}
             </p>
           )}
           {!hint && (
-            <p className="text-stone-400 text-xs mt-2">tap to reveal</p>
+            <p className="text-stone-300 dark:text-stone-600 text-xs mt-2">tap to reveal</p>
           )}
         </div>
 
         {/* Back */}
         <div
-          className="absolute inset-0 w-full rounded-2xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 p-10 flex flex-col items-center justify-center gap-4"
+          className="absolute inset-0 w-full rounded-2xl border border-stone-200/60 dark:border-stone-700/60 bg-gradient-to-b from-stone-50 to-white dark:from-stone-900/80 dark:to-stone-900 p-10 flex flex-col items-center justify-center gap-4 shadow-card"
           style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
         >
-          <p className="font-tibetan text-5xl text-stone-900 dark:text-stone-100 leading-relaxed text-center">
+          <p className="font-tibetan text-5xl text-stone-800 dark:text-stone-100 leading-relaxed text-center">
             {card.front.tibetan}
           </p>
           {mode === 'phonetics' ? (
@@ -59,7 +59,7 @@ export function FlashCard({ card, mode, isFlipped, onFlip, hint }: Props) {
               <p className="text-2xl font-semibold text-stone-700 dark:text-stone-200">
                 {card.front.phonetic}
               </p>
-              <p className="text-stone-500 dark:text-stone-400 text-sm">
+              <p className="text-stone-400 dark:text-stone-500 text-sm">
                 {card.front.english}
               </p>
             </>

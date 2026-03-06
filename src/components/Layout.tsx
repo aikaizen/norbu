@@ -2,12 +2,14 @@ import { Outlet } from 'react-router-dom'
 import { NavBar } from './NavBar'
 import { useAuth } from '../auth/useAuth'
 import { BrandLogo } from './BrandLogo'
+import { ImpersonationBanner } from './ImpersonationBanner'
 
 export function Layout() {
-  const { profile, signOut } = useAuth()
+  const { profile, signOut, impersonatingUserId } = useAuth()
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
+    <div className={`min-h-screen flex flex-col md:flex-row ${impersonatingUserId ? 'pt-10' : ''}`}>
+      <ImpersonationBanner />
       <NavBar />
       <main className="flex-1 pb-20 md:pb-0 max-w-2xl mx-auto w-full px-4 py-6 space-y-4">
         <div className="flex items-center justify-between gap-3">

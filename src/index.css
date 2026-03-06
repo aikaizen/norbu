@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Tibetan:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Tibetan:wght@400;600&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,5 +7,19 @@
 @layer base {
   body {
     @apply bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .card-surface {
+    @apply rounded-2xl border border-stone-200/80 dark:border-stone-800/80
+           bg-white dark:bg-stone-900
+           shadow-card transition-shadow duration-200;
+  }
+  .card-surface:hover {
+    @apply shadow-card-hover;
   }
 }

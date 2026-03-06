@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from '../db'
-import { ensureStarterData, getStarterCards, STARTER_DECKS } from '../db/seeds'
+import { ensureStarterData, getStarterCards, getStarterDecks } from '../db/seeds'
 
 function hasUndefinedDeep(value: unknown): boolean {
   if (value === undefined) return true
@@ -40,7 +40,7 @@ describe('starter seeds', () => {
     const cards = await db.cards.toArray()
     const deckIds = new Set(decks.map((deck) => deck.id))
 
-    for (const starterDeck of STARTER_DECKS) {
+    for (const starterDeck of getStarterDecks()) {
       expect(deckIds.has(starterDeck.id)).toBe(true)
     }
     expect(cards.length).toBeGreaterThanOrEqual(getStarterCards().length)

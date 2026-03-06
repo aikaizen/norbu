@@ -39,6 +39,10 @@ export function Community() {
         const decks = await listCommunityDecks()
         if (!cancelled) {
           const filtered = user ? decks.filter((deck) => deck.ownerId !== user.uid) : decks
+          filtered.sort((a, b) => {
+            if (a.teacherRecommended !== b.teacherRecommended) return a.teacherRecommended ? -1 : 1
+            return b.lastUpdatedAt - a.lastUpdatedAt
+          })
           setCommunityDecks(filtered)
         }
       } finally {
@@ -145,10 +149,15 @@ export function Community() {
             const isBusy = busyDeckId === deck.id
 
             return (
-              <div key={deck.id} className="rounded-xl border border-stone-200 dark:border-stone-800 p-4 space-y-3">
+              <div key={deck.id} className="card-surface p-4 space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-medium">{deck.name}</p>
+                    {deck.teacherRecommended && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-saffron-100 dark:bg-saffron-950/40 text-saffron-700 dark:text-saffron-400">
+                        Teacher Recommended
+                      </span>
+                    )}
                     <p className="text-sm text-stone-500 dark:text-stone-400">{deck.description}</p>
                     <p className="text-xs text-stone-500 mt-1">
                       by {deck.ownerName} • {deck.cardCount} cards
@@ -163,7 +172,7 @@ export function Community() {
                     onClick={() => {
                       void importDeck(deck)
                     }}
-                    className="text-sm rounded-lg px-3 py-1.5 bg-amber-700 text-white hover:bg-amber-800 disabled:opacity-60"
+                    className="text-sm rounded-lg px-3 py-1.5 bg-saffron-600 text-white hover:bg-saffron-700 disabled:opacity-60 transition-colors"
                   >
                     Import deck
                   </button>
@@ -201,7 +210,7 @@ export function Community() {
                     onClick={() => {
                       void addCardsToDeck(deck, selectedDeckId)
                     }}
-                    className="text-sm rounded-lg px-3 py-1.5 border border-amber-700 text-amber-600 dark:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/20 disabled:opacity-60"
+                    className="text-sm rounded-lg px-3 py-1.5 border border-saffron-600 text-saffron-600 dark:text-saffron-400 hover:bg-saffron-50 dark:hover:bg-saffron-950/20 disabled:opacity-60 transition-colors"
                   >
                     Add cards to selected deck
                   </button>

@@ -2,9 +2,9 @@ import { useStats } from '../hooks/useStats'
 
 function StatBox({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-xl border border-stone-200 dark:border-stone-800 p-5 text-center">
-      <p className="text-3xl font-semibold text-stone-900 dark:text-stone-100">{value}</p>
-      <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">{label}</p>
+    <div className="card-surface p-5 text-center">
+      <p className="text-3xl font-bold text-stone-800 dark:text-stone-100">{value}</p>
+      <p className="text-sm text-stone-400 dark:text-stone-500 mt-1">{label}</p>
     </div>
   )
 }
@@ -18,9 +18,9 @@ export function Stats() {
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Stats</h1>
 
-      <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 p-5 text-center">
-        <p className="text-4xl font-bold text-amber-600 dark:text-amber-400">◆ {stats.diamonds}</p>
-        <p className="text-sm text-amber-700 dark:text-amber-500 mt-1">diamonds earned</p>
+      <div className="rounded-2xl bg-gradient-to-br from-saffron-50 to-saffron-100/50 dark:from-saffron-950/30 dark:to-saffron-900/10 border border-saffron-200/60 dark:border-saffron-800/40 p-6 text-center shadow-glow">
+        <p className="text-4xl font-bold text-saffron-600 dark:text-saffron-400">◆ {stats.diamonds}</p>
+        <p className="text-sm text-saffron-700/70 dark:text-saffron-400/60 mt-1">diamonds earned</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">

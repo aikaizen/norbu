@@ -1,4 +1,5 @@
 import type { User } from 'firebase/auth'
+import type { Role } from '../auth/context'
 import {
   addDoc,
   collection,
@@ -16,7 +17,7 @@ import {
 import { dbCloud } from './firebase'
 import { clearLocalData, getLocalDataSnapshot, replaceLocalData } from '../db'
 import type { Card, Deck, ReviewLog, Session, Settings } from '../db/schema'
-import { ensureStarterData, STARTER_DECKS, getStarterCards } from '../db/seeds'
+import { ensureStarterData, getStarterDecks, STARTER_DECK_IDS, getStarterCards } from '../db/seeds'
 
 const LEGACY_COMMUNITY_DECK_ID = 'deck-community-cards'
 const MAX_BATCH_WRITES = 450
@@ -26,6 +27,7 @@ export interface UserProfile {
   displayName: string
   email: string
   photoURL: string
+  role: 'admin' | 'teacher' | 'student'
   createdAt: number
   updatedAt: number
 }
@@ -42,6 +44,7 @@ interface CommunityCard {
   tags: string[]
   difficulty: number
   createdAt: number
+  teacherRecommended?: boolean
 }
 
 export interface CommunityDeckSummary {
@@ -53,6 +56,7 @@ export interface CommunityDeckSummary {
   description: string
   cardCount: number
   lastUpdatedAt: number
+  teacherRecommended: boolean
 }
 
 export interface CommunityCardItem {
@@ -164,11 +168,15 @@ function isImportedCommunityCard(card: Card) {
 }
 
 export async function ensureProfile(user: User): Promise<UserProfile> {
+  const role: UserProfile['role'] =
+    user.email === 'adil.islam@gmail.com' ? 'admin' : 'student'
+
   const profile: UserProfile = {
     id: user.uid,
     displayName: user.displayName ?? user.email ?? 'Norbu Student',
     email: user.email ?? '',
     photoURL: user.photoURL ?? '',
+    role,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   }
@@ -180,6 +188,7 @@ export async function ensureProfile(user: User): Promise<UserProfile> {
     const merged: UserProfile = {
       ...existingData,
       ...profile,
+      role: existingData.role ?? role,
       createdAt: existingData.createdAt ?? profile.createdAt,
       updatedAt: Date.now(),
     }
@@ -200,30 +209,23 @@ async function ensureStarterCloudData(userId: string) {
 
   const existingDeckIds = new Set(deckSnap.docs.map((d) => d.id))
   const existingCardIds = new Set(cardSnap.docs.map((d) => d.id))
-  const batch = writeBatch(requireCloud())
-  const starterDecks = STARTER_DECKS
-  let writes = 0
+  const operations: Array<(batch: WriteBatch) => void> = []
 
-  for (const deck of starterDecks) {
+  for (const deck of getStarterDecks()) {
     if (existingDeckIds.has(deck.id)) continue
-    batch.set(doc(deckCollection(userId), deck.id), stripUndefined(deck))
-    writes += 1
+    operations.push((batch) => batch.set(doc(deckCollection(userId), deck.id), stripUndefined(deck)))
   }
 
   for (const card of getStarterCards()) {
     if (existingCardIds.has(card.id)) continue
-    batch.set(doc(cardCollection(userId), card.id), stripUndefined(card))
-    writes += 1
+    operations.push((batch) => batch.set(doc(cardCollection(userId), card.id), stripUndefined(card)))
   }
 
   if (!settingsSnap.exists()) {
-    batch.set(settingsDoc(userId), { id: 'singleton', diamonds: 0 } satisfies Settings)
-    writes += 1
+    operations.push((batch) => batch.set(settingsDoc(userId), { id: 'singleton', diamonds: 0 } satisfies Settings))
   }
 
-  if (writes > 0) {
-    await batch.commit()
-  }
+  await commitWriteOperations(operations)
 }
 
 async function publishExistingUserCardsToCommunity(user: User) {
@@ -254,6 +256,7 @@ async function publishExistingUserCardsToCommunity(user: User) {
       tags: card.tags,
       difficulty: card.difficulty,
       createdAt: Date.now(),
+      teacherRecommended: false,
     }
 
     operations.push((batch) => batch.set(doc(communityCollection(), communityCardId), stripUndefined(communityCard), { merge: true }))
@@ -352,7 +355,7 @@ export async function createReviewLog(userId: string, reviewLog: Omit<ReviewLog,
   await addDoc(reviewLogCollection(userId), reviewLog)
 }
 
-export async function publishCardToCommunity(user: User, card: Card): Promise<void> {
+export async function publishCardToCommunity(user: User, card: Card, role: Role): Promise<void> {
   if (isImportedCommunityCard(card)) return
 
   const sourceDeckSnap = await getDoc(doc(deckCollection(user.uid), card.deckId))
@@ -370,6 +373,7 @@ export async function publishCardToCommunity(user: User, card: Card): Promise<vo
     tags: card.tags,
     difficulty: card.difficulty,
     createdAt: Date.now(),
+    teacherRecommended: role === 'teacher' || role === 'admin',
   }
 
   await setDocSafe(doc(communityCollection(), communityCardId), communityCard, { merge: true })
@@ -408,7 +412,7 @@ export async function listCommunityDecks(): Promise<CommunityDeckSummary[]> {
     if (!card) continue
 
     const key = toCommunityDeckKey(card.ownerId, card.sourceDeckId)
-    const starterDeck = STARTER_DECKS.find((deck) => deck.id === card.sourceDeckId)
+    const starterDeck = getStarterDecks().find((deck) => deck.id === card.sourceDeckId)
     const name = raw.sourceDeckName?.trim() || starterDeck?.name || 'Shared Deck'
     const description = raw.sourceDeckDescription?.trim() || starterDeck?.description || `Shared cards from ${card.ownerName}`
 
@@ -416,6 +420,7 @@ export async function listCommunityDecks(): Promise<CommunityDeckSummary[]> {
     if (existing) {
       existing.cardCount += 1
       existing.lastUpdatedAt = Math.max(existing.lastUpdatedAt, card.createdAt)
+      if (raw.teacherRecommended) existing.teacherRecommended = true
       continue
     }
 
@@ -428,6 +433,7 @@ export async function listCommunityDecks(): Promise<CommunityDeckSummary[]> {
       description,
       cardCount: 1,
       lastUpdatedAt: card.createdAt,
+      teacherRecommended: Boolean(raw.teacherRecommended),
     })
   }
 
@@ -443,4 +449,39 @@ export async function listCommunityCardsForDeck(deck: Pick<CommunityDeckSummary,
     .filter((card): card is CommunityCardItem => Boolean(card))
     .filter((card) => card.ownerId === deck.ownerId && card.sourceDeckId === deck.sourceDeckId)
     .sort((a, b) => a.createdAt - b.createdAt)
+}
+
+export async function listAllProfiles(): Promise<UserProfile[]> {
+  const profilesSnap = await getDocs(query(collection(requireCloud(), 'profiles')))
+  return profilesSnap.docs.map((d) => d.data() as UserProfile)
+}
+
+export async function setUserRole(userId: string, role: UserProfile['role']): Promise<void> {
+  const ref = profileDoc(userId)
+  await setDocSafe(ref, { role, updatedAt: Date.now() } as UserProfile, { merge: true })
+}
+
+export async function getUserDecks(userId: string): Promise<Deck[]> {
+  const snap = await getDocs(query(deckCollection(userId)))
+  return snap.docs.map((d) => d.data() as Deck)
+}
+
+export async function getUserCards(userId: string): Promise<Card[]> {
+  const snap = await getDocs(query(cardCollection(userId)))
+  return snap.docs.map((d) => d.data() as Card)
+}
+
+export async function getUserSessions(userId: string): Promise<Session[]> {
+  const snap = await getDocs(query(sessionCollection(userId)))
+  return snap.docs.map((d) => d.data() as Session)
+}
+
+export async function getUserSettings(userId: string): Promise<Settings> {
+  const snap = await getDoc(settingsDoc(userId))
+  return snap.exists() ? (snap.data() as Settings) : { id: 'singleton', diamonds: 0 }
+}
+
+export async function getUserReviewLogs(userId: string): Promise<ReviewLog[]> {
+  const snap = await getDocs(query(reviewLogCollection(userId)))
+  return snap.docs.map((d) => d.data() as ReviewLog)
 }

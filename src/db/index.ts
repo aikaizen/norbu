@@ -125,10 +125,10 @@ export async function replaceLocalData(snapshot: LocalSnapshot) {
     }
     await db.settings.add(snapshot.settings)
   })
-  await db.transaction('rw', db.reviewLogs, async () => {
-    await db.reviewLogs.clear()
-    if (snapshot.reviewLogs && snapshot.reviewLogs.length > 0) {
-      await db.reviewLogs.bulkAdd(snapshot.reviewLogs)
-    }
-  })
+  if (snapshot.reviewLogs && snapshot.reviewLogs.length > 0) {
+    await db.transaction('rw', db.reviewLogs, async () => {
+      await db.reviewLogs.clear()
+      await db.reviewLogs.bulkAdd(snapshot.reviewLogs!)
+    })
+  }
 }

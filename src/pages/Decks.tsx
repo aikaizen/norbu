@@ -20,14 +20,14 @@ export function Decks() {
       </div>
 
       {showForm && (
-        <div className="rounded-xl border border-stone-200 dark:border-stone-800 p-4">
+        <div className="card-surface p-4">
           <DeckForm onDone={() => setShowForm(false)} />
         </div>
       )}
 
       <div className="space-y-2">
         {decks?.map((deck) => (
-          <div key={deck.id} className="rounded-xl border border-stone-200 dark:border-stone-800 p-4 space-y-3">
+          <div key={deck.id} className="card-surface p-4 space-y-3">
             <div className="flex items-center justify-between">
               <Link to={`/decks/${deck.id}`} className="hover:underline">
                 <p className="font-medium">{deck.name}</p>
@@ -37,13 +37,13 @@ export function Decks() {
             <div className="grid grid-cols-2 gap-2">
               <Link
                 to={`/decks/${deck.id}/review/phonetics`}
-                className="text-center text-sm px-3 py-2 rounded-lg bg-amber-700 text-white hover:bg-amber-800 transition-colors"
+                className="text-center text-sm px-3 py-2 rounded-lg bg-saffron-600 text-white hover:bg-saffron-700 transition-colors"
               >
                 Phonetics ({deck.phoneticsReady})
               </Link>
               <Link
                 to={`/decks/${deck.id}/review/meaning`}
-                className="text-center text-sm px-3 py-2 rounded-lg border border-amber-700 text-amber-700 dark:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors"
+                className="text-center text-sm px-3 py-2 rounded-lg border border-saffron-600 text-saffron-600 dark:text-saffron-400 hover:bg-saffron-50 dark:hover:bg-saffron-950/20 transition-colors"
               >
                 Meanings ({deck.meaningReady})
               </Link>

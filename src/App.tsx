@@ -13,6 +13,8 @@ const DeckDetail = lazy(async () => import('./pages/DeckDetail').then((m) => ({ 
 const Review = lazy(async () => import('./pages/Review').then((m) => ({ default: m.Review })))
 const Sessions = lazy(async () => import('./pages/Sessions').then((m) => ({ default: m.Sessions })))
 const Stats = lazy(async () => import('./pages/Stats').then((m) => ({ default: m.Stats })))
+const Admin = lazy(async () => import('./pages/Admin').then((m) => ({ default: m.Admin })))
+const AdminUserDetail = lazy(async () => import('./pages/AdminUserDetail').then((m) => ({ default: m.AdminUserDetail })))
 
 export default function App() {
   const { user, loading, syncing, error, signInWithGoogle } = useAuth()
@@ -42,6 +44,8 @@ export default function App() {
             <Route path="/decks/:deckId/review/:mode" element={<Review />} />
             <Route path="/sessions" element={<Sessions />} />
             <Route path="/stats" element={<Stats />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/user/:userId" element={<AdminUserDetail />} />
           </Route>
         </Routes>
       </Suspense>

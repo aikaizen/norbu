@@ -13,7 +13,7 @@ import {
   type UserProfile,
 } from '../lib/cloudStore'
 import { ensureStarterData } from '../db/seeds'
-import { AuthContext, type AuthContextValue } from './context'
+import { AuthContext, type AuthContextValue, type Role } from './context'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -21,6 +21,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [impersonatingUserId, setImpersonatingUserId] = useState<string | null>(null)
+  const [impersonatingName, setImpersonatingName] = useState<string | null>(null)
 
   useEffect(() => {
     if (!hasFirebaseConfig || !auth) {
@@ -99,15 +101,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signOutClearLocal()
   }, [])
 
+  const impersonate = useCallback((userId: string, displayName: string) => {
+    setImpersonatingUserId(userId)
+    setImpersonatingName(displayName)
+  }, [])
+
+  const stopImpersonating = useCallback(() => {
+    setImpersonatingUserId(null)
+    setImpersonatingName(null)
+  }, [])
+
+  const role: Role = profile?.role ?? 'student'
+  const effectiveUserId = impersonatingUserId ?? user?.uid ?? null
+
   const value = useMemo<AuthContextValue>(() => ({
     user,
     profile,
+    role,
     loading,
     syncing,
     error,
     signInWithGoogle,
     signOut,
-  }), [user, profile, loading, syncing, error, signInWithGoogle, signOut])
+    impersonatingUserId,
+    impersonate,
+    stopImpersonating,
+    effectiveUserId,
+  }), [user, profile, role, loading, syncing, error, signInWithGoogle, signOut, impersonatingUserId, impersonate, stopImpersonating, effectiveUserId])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

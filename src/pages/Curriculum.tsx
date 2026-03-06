@@ -8,7 +8,7 @@ export function Curriculum() {
         </p>
       </div>
 
-      <section className="rounded-xl border border-stone-200 dark:border-stone-800 p-4 space-y-2">
+      <section className="card-surface p-4 space-y-2">
         <h2 className="text-lg font-medium">Official Packet: Intake</h2>
         <p className="text-sm text-stone-500 dark:text-stone-400">
           Source file: <code>Tibetan Language Hand Out Packet.pdf</code> (29 pages).
@@ -18,7 +18,7 @@ export function Curriculum() {
         </p>
       </section>
 
-      <section className="rounded-xl border border-stone-200 dark:border-stone-800 p-4 space-y-2">
+      <section className="card-surface p-4 space-y-2">
         <h2 className="text-lg font-medium">What To Build From It</h2>
         <ul className="text-sm text-stone-500 dark:text-stone-400 space-y-1 list-disc pl-5">
           <li>Packet-aligned deck units (letters, pronunciation, core vocabulary, phrases).</li>
@@ -28,7 +28,7 @@ export function Curriculum() {
         </ul>
       </section>
 
-      <section className="rounded-xl border border-stone-200 dark:border-stone-800 p-4 space-y-2">
+      <section className="card-surface p-4 space-y-2">
         <h2 className="text-lg font-medium">Implementation Plan</h2>
         <ol className="text-sm text-stone-500 dark:text-stone-400 space-y-1 list-decimal pl-5">
           <li>OCR packet pages and store normalized text in a versioned source file.</li>

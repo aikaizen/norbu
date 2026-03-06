@@ -23,19 +23,19 @@ export function Sessions() {
       </div>
 
       {showForm && (
-        <div className="rounded-xl border border-stone-200 dark:border-stone-800 p-4">
+        <div className="card-surface p-4">
           <SessionForm onDone={() => setShowForm(false)} />
         </div>
       )}
 
       <div className="space-y-3">
         {sessions?.map((session) => (
-          <div key={session.id} className="rounded-xl border border-stone-200 dark:border-stone-800 p-4 space-y-2">
+          <div key={session.id} className="card-surface p-4 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">{formatDate(session.date)}</span>
               <div className="flex gap-2">
                 {session.isTutorSession && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400">tutor</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-saffron-100 dark:bg-saffron-950/40 text-saffron-700 dark:text-saffron-400">tutor</span>
                 )}
                 {session.duration > 0 && (
                   <span className="text-xs text-stone-400">{session.duration}m</span>
